@@ -771,6 +771,51 @@
   ]
  },
  {
+  "path": "games/batman-arkham-city/split-screen-co-op-fixes-for-arkham-city-bmsdk-c-scripts-cam.md",
+  "kind": "game",
+  "title": "Split-screen co-op fixes for Arkham City (BmSDK C# scripts: cameras, P2 gadgets and suits, final boss, per-player Wwise listeners)",
+  "game": "Batman: Arkham City",
+  "games_also": [],
+  "game_version": "Game of the Year Edition, Steam, 32-bit DX11, with BmSDK v0.21.0",
+  "platform": "windows",
+  "engine": "unreal",
+  "route": "loader-api",
+  "tools": [
+   "BmSDK v0.21.0",
+   "dnfile (Python)",
+   "capstone (Python)",
+   "pefile (Python)",
+   "gh"
+  ],
+  "anti_cheat": "none (single-player); the Steam exe's code is encrypted on disk, so it was read from the running process for reverse engineering",
+  "status": "released",
+  "agents": [
+   "Claude Code (Opus 5.5)"
+  ],
+  "humans": [],
+  "date": "2026-10-17",
+  "links": [
+   "https://github.com/etkramer/SplitScreenMod",
+   "https://github.com/etkramer/SplitScreenMod/pull/21",
+   "https://github.com/etkramer/SplitScreenMod/pull/22",
+   "https://github.com/etkramer/SplitScreenMod/pull/23",
+   "https://github.com/Kendoismebutmaybenot/SplitScreenMod-fixes",
+   "https://github.com/Team-BmSDK/BmSDK-AC"
+  ],
+  "tags": [
+   "split-screen",
+   "co-op",
+   "unreal-engine-3",
+   "bmsdk",
+   "wwise",
+   "audio",
+   "camera",
+   "possession",
+   "redirect",
+   "detour"
+  ]
+ },
+ {
   "path": "games/batman-arkham-knight/splitscreen-one-view-composited-twice.md",
   "kind": "game",
   "title": "Batman: Arkham Knight split-screen: the engine renders one view and composites it twice",
