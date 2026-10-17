@@ -20,7 +20,7 @@
   <img src="docs/media/mods-teaser.gif" alt="Six mods made by AI coding agents, with the universal-modder tile in the corner: Steve gliding an elytra through Los Santos, the Nether spreading over Los Santos, Minecraft mobs fighting the LSPD, the Halo Warthog in Minecraft, a World at War flamethrower in Minecraft, and World at War zombies in Minecraft. It ends on the universal-modder logo and &quot;mod any game.&quot;" width="560">
 </p>
 
-<p align="center"><b>Coming next: the mod hub.</b> Publish your mods, remix other people's, and make new ones.<br>
+<p align="center"><b>Coming next: the mod hub at <a href="https://universalmodder.com">universalmodder.com</a>.</b> Publish your mods, remix other people's, and make new ones.<br>
   Share what you make, get help, and follow along:</p>
 <p align="center">
   <a href="https://discord.com/invite/sEZWaf7vV"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/media/discord-dark.svg"><img src="docs/media/discord-light.svg" height="32" alt="join the discord"></picture></a>
@@ -149,7 +149,9 @@ A few notes from the community:
 that take days. Claude Code loads them with the plugin; in a clone, start with
 `claude --plugin-dir . --agent mod-orchestrator`. Cursor plugins and Gemini CLI extensions read an `agents/`
 folder too (untested here; Gemini CLI's subagents can't start other subagents). Three agents use several
-times the tokens of one, so keep it for long mods. Any agent can read the files as role briefs.
+times the tokens of one, so keep it for long mods. What worked for one user: the orchestrator on Fable 5.1 at
+medium effort, the game worker on Sonnet 5.5 at medium, and the offline worker on Opus 5.5 at high. Any agent can
+read the files as role briefs.
 
 <table>
   <thead><tr><th width="200">Agent</th><th>What it does</th></tr></thead>
