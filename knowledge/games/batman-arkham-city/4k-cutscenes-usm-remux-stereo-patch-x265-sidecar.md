@@ -1,6 +1,6 @@
 ---
 kind: game
-title: "4K pre-rendered cutscenes for Arkham City (CRI USM remux, stereo-check patch, x265 sidecar playback via BmSDK)"
+title: "4K 60 fps pre-rendered cutscenes for Arkham City (CRI USM remux, stereo-check patch, x265 sidecar playback via BmSDK)"
 game: "Batman: Arkham City"
 games_also: []
 game_version: "Game of the Year Edition, Steam, 32-bit DX11, BmSDK v0.21.0, CRI Movie PCx86 2.82rs1"
@@ -17,14 +17,16 @@ links: ["https://github.com/Team-BmSDK/BmSDK-AC", "knowledge/games/batman-arkham
 tags: [cutscenes, fmv, video, 4k, cri, usm, sofdec, mpeg-1, scaleform, gfx-video, stereo-3d, side-by-side, x265, hevc, ffmpeg, bmsdk, detour, unreal-engine-3]
 ---
 
-# 4K pre-rendered cutscenes for Arkham City (CRI USM remux, stereo-check patch, x265 sidecar playback via BmSDK)
+# 4K 60 fps pre-rendered cutscenes for Arkham City (CRI USM remux, stereo-check patch, x265 sidecar playback via BmSDK)
 
 > Arkham City plays its story FMVs with CRI Movie (`.usm`), not Bink like Arkham Asylum, so "drop in 4K
 > `.bik` files" doesn't work. Replacing them takes three things: a USM remuxer that swaps the video and keeps
 > every audio language, the subtitles and the cue points; an in-memory patch of the game's "this video is
 > side-by-side 3D" check, which crops anything 2560 px or wider to its left half; and, to avoid ~28 GB of
 > MPEG-1, a BmSDK detour that paints frames from an x265 `.mkv` (decoded by an external ffmpeg) over a black
-> stand-in video. Verified in game with marked test videos at 3840x2160.
+> stand-in video. A 60 fps `.mkv` plays at a true 59.94 fps (the mod writes the in-between frames into the
+> video texture itself and caps the game at 59.94 fps during the movie). Verified in game with marked test
+> videos at 3840x2160, 30 and 60 fps.
 
 ## Setup
 - Batman: Arkham City GOTY, Steam, Windows 11, DX11 renderer, game at 3840x2160.
@@ -106,6 +108,18 @@ tags: [cutscenes, fmv, video, 4k, cri, usm, sofdec, mpeg-1, scaleform, gfx-video
    8 s), and encode the real video to `<name>.mkv` (x265 10-bit CRF 16, or `hevc_nvenc -cq 16`) with the
    frame count forced to the original's. Put both in `MoviesStereo`. With no `.mkv`, the movie plays as
    normal; the plain-MPEG-1 route is the same remux with the real video at `-q:v 2`.
+5. **60 fps:** keep the stand-in at 29.97 fps and make only the `.mkv` 59.94 fps (twice the frame count;
+   the mod reads its rate with ffprobe). Two things are added:
+   - Pace the sidecar off a smooth 59.94 fps clock that is re-anchored to frame 2k whenever CRI
+     delivers stand-in frame k (if it drifted more than 1.5 frames) and capped at 2 stand-in frames
+     ahead (so it stops when the game pauses).
+   - On every game tick where CRI delivered nothing, detour Scaleform video's per-tick update
+     (thiscall `(YUV texture, x, y)`, `ret 0xC`) and, if the clock moved on, write the clock's frame into
+     the texture with its own vtable calls: `+0x10 Map(0, 4, planes, 0)` returns the plane count,
+     `+0x14 Unmap(0, count, planes, 0)`. Each plane is 16 bytes: `{width, height, data, pitch}`.
+   - From BmSDK `OnTick`, set `Engine.MaxSmoothedFrameRate = 59.94` (with `bSmoothFrameRate`) while a
+     sidecar plays and restore it afterwards, so a 144 Hz G-Sync display shows exactly one video frame
+     per refresh.
 
 ## Verification
 - **Oracle:** marked test videos played in the real game through a throwaway BmSDK script that calls
@@ -119,6 +133,10 @@ tags: [cutscenes, fmv, video, 4k, cri, usm, sofdec, mpeg-1, scaleform, gfx-video
 - **Verified:** 3840x2160 MPEG-1 inside the USM shows in full with the patch. The x265 sidecar plays in sync
   with a running frame counter (8 s test clip: 4 MB stand-in + 18 MB mkv vs 93 MB as 4K MPEG-1). The BmSDK
   log shows `patched 2 stereo video checks` and `2_02.usm uses 2_02.mkv`.
+- **60 fps, run by the agent itself** (launch via Steam, F7 from the main menu, read the BmSDK log):
+  453 distinct sidecar frames of the ~455 shown before the movie's last cue, 239 CRI deliveries,
+  477 video ticks in ~8 s (the cap held at 59.94), 2 in-between frames not decoded in time, 0 Map
+  failures. Each frame took about 1 ms to copy. CRI's own decode of the stand-in was 166 ms in total.
 - **Not verified:** a full-length cutscene; pausing or skipping mid-sidecar; 3D Vision with the patch;
   the stock stereo cutscenes after the patch (they should be unchanged, since 3840 >= 2 x 1080); the
   D3D9 renderer; the Epic build (the signatures may differ).
@@ -145,6 +163,19 @@ tags: [cutscenes, fmv, video, 4k, cri, usm, sofdec, mpeg-1, scaleform, gfx-video
    method non-static.
 10. **The sidecar must match the stand-in's frame count.** Audio, subtitles and cues are timed by the CRI
     player from the original USM, so force the frame count (`-frames:v N`, `tpad` to clone the last frame).
+11. **A 59.94 fps 4K stand-in only reaches ~47 fps.** CRI decodes the stand-in in the background and
+    can't do 4K MPEG-1 with B-frames at 60 (the game ticked at 133/s and CRI still delivered 47/s). Keep
+    the stand-in at 29.97 and add the in-between frames yourself.
+12. **A stand-in without B-frames freezes after ~3 s** (CRI stops delivering at frame ~140 while the
+    audio goes on), with an I-frame every 13 frames or with only one. Keep `-g 13 -bf 2` like the originals.
+13. **CRI hands out frames unevenly** (two on back-to-back ticks, then a gap). Showing "frame 2k+1 half a
+    frame after 2k" only filled 147 of 239 gaps. A smooth clock re-anchored to CRI fills all of them.
+14. **The Map plane layout is `{width, height, data, pitch}`.** Reading the game's own caller suggests
+    `{rows, data, pitch}`, but it reads them relative to an esp that is 4 bytes higher after the
+    callee pops its arguments. Getting it wrong makes `Buffer.MemoryCopy` write to address 2160, which
+    surfaces in BmSDK as a NullReferenceException. Log `e.ToString()` once to see the line.
+15. **A 4K MPEG-1 frame counter can't tell 30 from 60 fps.** The counter shows the frame for the current
+    time either way. Count distinct frames copied in the mod instead.
 
 ## Assets
 None generated. Test videos were ffmpeg `drawbox`/`drawtext` overlays on a lanczos upscale of the original
@@ -156,6 +187,8 @@ One long session.
 
 ## Open questions
 - Full-length cutscenes, skip/pause behaviour and memory use with the sidecar.
+- Whether 59.94 vs the game's real tick cadence shows any judder over long scenes (two frames per refresh
+  were missed in 8 s).
 - Whether the PS3 / Return to Arkham releases carry cleaner masters to upscale from (the PC files are
   ~9.5 Mbit/s MPEG-1 per eye).
 - Epic build signatures; the D3D9 path.

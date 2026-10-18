@@ -773,7 +773,7 @@
  {
   "path": "games/batman-arkham-city/4k-cutscenes-usm-remux-stereo-patch-x265-sidecar.md",
   "kind": "game",
-  "title": "4K pre-rendered cutscenes for Arkham City (CRI USM remux, stereo-check patch, x265 sidecar playback via BmSDK)",
+  "title": "4K 60 fps pre-rendered cutscenes for Arkham City (CRI USM remux, stereo-check patch, x265 sidecar playback via BmSDK)",
   "game": "Batman: Arkham City",
   "games_also": [],
   "game_version": "Game of the Year Edition, Steam, 32-bit DX11, BmSDK v0.21.0, CRI Movie PCx86 2.82rs1",
