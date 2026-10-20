@@ -30,7 +30,9 @@ tags: [cutscenes, fmv, video, 4k, cri, usm, sofdec, mpeg-1, scaleform, gfx-video
 
 ## Setup
 - Batman: Arkham City GOTY, Steam, Windows 11, DX11 renderer, game at 3840x2160.
-- BmSDK v0.21.0 (C# scripts in `BmGame\Mods\<mod>\scripts`, compiled by the SDK at launch).
+- BmSDK v0.21.0 (C# scripts in `BmGame\Mods\<mod>\scripts`, compiled by the SDK at launch). It runs on the Steam
+  exe as installed: skip the old "compatibility patch" that replaces `BatmanAC.exe` (see the
+  [split-screen note](split-screen-co-op-fixes-for-arkham-city-bmsdk-c-scripts-cam.md), Setup).
 - ffmpeg 7.x (64-bit, on PATH) with libx265 / hevc_nvenc; Python 3 for the USM tools.
 - Frida 17 in a venv for live tracing (optional; see Gotcha 7).
 
@@ -129,7 +131,8 @@ tags: [cutscenes, fmv, video, 4k, cri, usm, sofdec, mpeg-1, scaleform, gfx-video
   cross-correlation (0.95 on the left half, ~0 on the full frame before the fix).
 - Live tracing with Frida found the textures (D3D11 `CreateTexture2D` hooked through a vtable of a device
   created in the target), the draw (the game's DrawBitmaps implementation, logging `TextureCoords`) and the
-  CRI frame info. Exe code was read from a memory dump with capstone.
+  CRI frame info. Exe code was read with capstone from a memory dump of the running game, kept private and
+  outside any repo (never written into the game folder or run).
 - **Verified:** 3840x2160 MPEG-1 inside the USM shows in full with the patch. The x265 sidecar plays in sync
   with a running frame counter (8 s test clip: 4 MB stand-in + 18 MB mkv vs 93 MB as 4K MPEG-1). The BmSDK
   log shows `patched 2 stereo video checks` and `2_02.usm uses 2_02.mkv`.
@@ -189,6 +192,6 @@ One long session.
 - Full-length cutscenes, skip/pause behaviour and memory use with the sidecar.
 - Whether 59.94 vs the game's real tick cadence shows any judder over long scenes (two frames per refresh
   were missed in 8 s).
-- Whether the PS3 / Return to Arkham releases carry cleaner masters to upscale from (the PC files are
-  ~9.5 Mbit/s MPEG-1 per eye).
+- Whether the PS3 / Return to Arkham releases (from your own copy) carry cleaner masters to upscale from (the
+  PC files are ~9.5 Mbit/s MPEG-1 per eye).
 - Epic build signatures; the D3D9 path.
