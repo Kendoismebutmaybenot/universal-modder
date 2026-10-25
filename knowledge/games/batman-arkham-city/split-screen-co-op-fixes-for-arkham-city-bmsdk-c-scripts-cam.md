@@ -15,7 +15,7 @@ agents:
 - Claude Code (Opus 5.5)
 humans: []
 date: '2026-10-25'
-links: ["https://github.com/etkramer/SplitScreenMod", "https://github.com/etkramer/SplitScreenMod/pull/21", "https://github.com/etkramer/SplitScreenMod/pull/22", "https://github.com/etkramer/SplitScreenMod/pull/23", "https://github.com/etkramer/SplitScreenMod/pull/26", "https://github.com/Kendoismebutmaybenot/SplitScreenMod-fixes", "https://github.com/Team-BmSDK/BmSDK-AC"]
+links: ["https://github.com/etkramer/SplitScreenMod", "https://github.com/etkramer/SplitScreenMod/pull/21", "https://github.com/etkramer/SplitScreenMod/pull/22", "https://github.com/etkramer/SplitScreenMod/pull/23", "https://github.com/etkramer/SplitScreenMod/pull/25", "https://github.com/etkramer/SplitScreenMod/pull/26", "https://github.com/Kendoismebutmaybenot/SplitScreenMod-fixes", "https://github.com/Team-BmSDK/BmSDK-AC"]
 tags: [split-screen, co-op, unreal-engine-3, bmsdk, wwise, audio, camera, possession, redirect, detour]
 ---
 # Split-screen co-op fixes for Arkham City (BmSDK C# scripts: cameras, P2 gadgets and suits, final boss, per-player Wwise listeners)
@@ -25,8 +25,9 @@ tags: [split-screen, co-op, unreal-engine-3, bmsdk, wwise, audio, camera, posses
 > P2 gadgets, suits and characters, playing the story through to the final boss in co-op, and per-player sound.
 > Every fix except the Clayface one was played and confirmed by the human in the real game (Steam build). PRs #21
 > and #22 were merged upstream. #23 (finding the sound range check by its bytes, so it can work on Epic) is still
-> open there, and so is #26 (the extra player ragdolls on death instead of P1; no teleport to P1 after a fight), so
-> those parts are only in the author's fork for now.
+> open there, and so are #25 (no teleport when sliding under gaps; solo kept like the normal game) and #26 (the
+> extra player ragdolls on death instead of P1; no teleport to P1 after a fight), so those parts are only in the
+> author's fork for now.
 
 ## Setup
 - Batman: Arkham City GOTY, Steam, Windows 11. The game runs as 32-bit DX11.
@@ -111,6 +112,21 @@ to its `Dead` state, but nothing calls `TriggerGameOver` for it.
 - An earlier version killed P1's pawn (`Health = 0; Died(...)`) and kept the extra player alive. That works, but P1
   ragdolls and P2 stays standing, so players can't tell who died (Gotcha 5).
 
+**Level transitions.** `RLevelTransition.SetPlayerLocation(PC, Pos, Rot, TellPlayerHesMoved, bForSavingOnly)` moves
+the player through a transition, and the original mod's redirect then moved every other player there too. The game
+also calls it with `bForSavingOnly = true` just to record a spot (e.g. when Batman slides under a gap), and the
+redirect moved everyone anyway, P1 included, even in solo. Return early when `bForSavingOnly` is set or in solo,
+and skip the player the game already moved (Gotcha 12).
+
+**Keep solo exactly like the normal game.** Several split-screen workarounds ran with one player too:
+- investigation scenes: AI X-ray sprites turned off and `StartInvestigateMovie` rewritten;
+- the cryptographic sequencer drawn as a flat overlay (`bWorldRendered = false`) instead of the in-world hologram;
+- Nightwing's wrist darts refilling without their timer (`RegenWristDart`).
+
+Gate each on `GamePlayers.Count > 1` and call the original otherwise. Don't use `RGameRI.IsMultiplayer()` for this:
+the mod forces it to false (see Cameras), so it's false in co-op too. The ghost debug key was left working in solo
+on purpose.
+
 **Clayface's mud men** (`RBMBehaviour_ClayfaceDrone(Small)`) hard-target P1 through their `Batman` field. Set it to
 the nearest player in `OnActivate`/`Tick`, with an 800 uu switch margin, and call `SetTargetPlayer`. (Not verified
 in game; there was no save at that point.)
@@ -194,6 +210,10 @@ They are cdecl, game object IDs are 32-bit, and there are 8 listeners. The mangl
     (teleport extra players more than 5000 uu from P1) treated the slow-motion fight finish as a cutscene, because
     it locks P1's controls. **Fix:** while P1 is locked, record which other players are locked too, and only
     teleport those. Story cutscenes lock every player; a fight finish locks only P1. Confirmed in game.
+12. **Every player, P1 too, snapped to a spot when Batman slid under a gap, even in solo.** **Cause:** the
+    `SetPlayerLocation` redirect moved all players without checking `bForSavingOnly`, which the game sets when it
+    only records the spot. **Fix:** do nothing when `bForSavingOnly` is set or with one player, and move only the
+    players the game didn't. Confirmed in game.
 
 ## Assets
 None.
