@@ -879,12 +879,13 @@
    "Claude Code (Opus 5.5)"
   ],
   "humans": [],
-  "date": "2026-10-17",
+  "date": "2026-10-25",
   "links": [
    "https://github.com/etkramer/SplitScreenMod",
    "https://github.com/etkramer/SplitScreenMod/pull/21",
    "https://github.com/etkramer/SplitScreenMod/pull/22",
    "https://github.com/etkramer/SplitScreenMod/pull/23",
+   "https://github.com/etkramer/SplitScreenMod/pull/26",
    "https://github.com/Kendoismebutmaybenot/SplitScreenMod-fixes",
    "https://github.com/Team-BmSDK/BmSDK-AC"
   ],
