@@ -23,11 +23,10 @@ tags: [split-screen, co-op, unreal-engine-3, bmsdk, wwise, audio, camera, posses
 > About 20 fixes to etkramer's local split-screen co-op mod for Batman: Arkham City, written as BmSDK C# scripts
 > (UnrealScript function redirects, plus two native detours for sound). They cover unstretched per-player cameras,
 > P2 gadgets, suits and characters, playing the story through to the final boss in co-op, and per-player sound.
-> Every fix except the Clayface one was played and confirmed by the human in the real game (Steam build). PRs #21
-> and #22 were merged upstream. #23 (finding the sound range check by its bytes, so it can work on Epic) is still
-> open there, and so are #25 (no teleport when sliding under gaps; solo kept like the normal game) and #26 (the
-> extra player ragdolls on death instead of P1; no teleport to P1 after a fight), so those parts are only in the
-> author's fork for now.
+> Every fix except the Clayface one was played and confirmed by the human in the real game (Steam build). PRs #21,
+> #22, #25 (no teleport when sliding under gaps; solo kept like the normal game) and #26 (the extra player ragdolls
+> on death instead of P1; no teleport to P1 after a fight) were merged upstream. #23 (finding the sound range check
+> by its bytes, so it can work on Epic) is still open there, so that part is only in the author's fork for now.
 
 ## Setup
 - Batman: Arkham City GOTY, Steam, Windows 11. The game runs as 32-bit DX11.
@@ -172,7 +171,9 @@ They are cdecl, game object IDs are 32-bit, and there are 8 listeners. The mangl
 - For audio, temporary every-2-seconds logging compared player and camera positions with the game's listener
   records, and read back Wwise's own listener positions and an object's active-listener mask. That showed the
   listener ends on P2, and that the mask fix worked but sounds were still dropped before reaching Wwise.
-- Solo was checked by reading a solo session's log: no player-added line and none of the fixes' log lines.
+- Solo was checked by reading a solo session's log: no player-added line and none of the fixes' log lines. That
+  only covers the fixes: the original mod's workarounds don't log, and some of them did run in solo (see "Keep solo
+  exactly like the normal game" and Gotcha 12).
 - **Not verified:** the Clayface mud men (no save there); the Epic Games Store build (other scripts list a separate
   Epic RVA for each hook, but the audio range check is untested on Epic); 3–4 player audio.
 
@@ -192,7 +193,8 @@ They are cdecl, game object IDs are 32-bit, and there are 8 listeners. The mangl
 5. **Black screen with no retry after a co-op death.** **Cause:** calling `Respawn()` inside a
    `TriggerGameOver`/`GameOver` redirect cancels a real game over. **Fix:** only log in those redirects. Let the
    extra player die, then put P1's controller into its dead state with `PawnDied` so the normal game over runs.
-   Killing P1's pawn instead also gives a game over, but the wrong player ragdolls (fixed 2026-10-25, PR #26).
+   Killing P1's pawn instead also gives a game over, but the wrong player ragdolls (fixed 2026-10-25 in
+   SplitScreenMod #26).
 6. **P2 teleported to P1 with full health instead of dying.** **Cause:** a "far from P1 = left behind, rescue" rule
    also caught real combat deaths. **Fix:** rescue only during cutscenes, out-of-world falls and crushing.
 7. **Sounds silent once the players split up, including P1's own punches.** **Cause:** the single Wwise listener
